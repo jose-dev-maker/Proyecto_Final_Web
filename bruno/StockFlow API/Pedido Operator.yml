@@ -1,0 +1,28 @@
+info:
+  name: Pedido Operator
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: http://localhost:3000/api/products
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Teclado",
+        "sku": "TEC-001",
+        "stock": 10,
+        "minStock": 2,
+        "price": 45.00,
+        "categoryId": 1
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhiZGJlMzhmLWMyYzktNDY4Yy1hYjcwLWVmOWJiZWZmZGNkOSIsImVtYWlsIjoib3BlcmF0b3JAc3RvY2tmbG93LmNvbSIsInJvbGUiOiJPUEVSQVRPUiIsImlhdCI6MTc4MDI2NTMyOSwiZXhwIjoxNzgwMzUxNzI5fQ.GJdzqqmTYuvOBUKZBI2PmzYHase4ywheiBsUfGSTV1M
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
