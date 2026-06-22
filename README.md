@@ -1,139 +1,94 @@
-# StockFlow API
 
-API REST para gestión de logística y despacho, desarrollada con Node.js, Express, TypeScript y Prisma ORM como proyecto del segundo parcial de Programación Web Avanzada.
+# StockFlow — Sistema de Gestión de Inventario y Pedidos
 
----
+StockFlow es una aplicación web fullstack desarrollada como proyecto del segundo parcial de Programación Web Avanzada. Sirve para gestionar el inventario de una empresa, crear y dar seguimiento a pedidos, y generar reportes de stock bajo. Está construida con Node.js, Express y TypeScript en el backend, React en el frontend, y Prisma como ORM con una base de datos SQLite.
 
-Requisitos previos
+El sistema maneja dos roles de usuario: el administrador tiene acceso completo al inventario y a los reportes, mientras que el operador puede consultar productos, crear pedidos y cancelarlos.
 
-Tener instalado Node.js v18 o superior y npm v9 o superior.
 
----
+## Estructura del repositorio
 
-Cómo instalar y correr el proyecto
+El proyecto está dividido en dos carpetas. La carpeta `backend` contiene toda la API REST y la lógica de negocio, y la carpeta `frontend` contiene la interfaz web en React. Cada una tiene su propio `package.json` y se corre de forma independiente, aunque el frontend depende de que el backend esté corriendo para funcionar.
 
-Primero instala las dependencias:
 
+## Cómo instalar y correr el proyecto
+
+Primero que nada, necesitás tener Node.js v18 o superior instalado en tu máquina.
+
+**Backend**
+
+Entrá a la carpeta del backend e instalá las dependencias:
+
+    cd backend
     npm install
 
-Luego crea un archivo .env en la raíz del proyecto con este contenido:
+Después creá un archivo `.env` dentro de la carpeta `backend` con el siguiente contenido:
 
     DATABASE_URL="file:./dev.db"
     JWT_SECRET="stockflow_super_secret_key_2025"
     JWT_EXPIRES_IN="24h"
     PORT=3000
 
-Después ejecuta las migraciones para crear la base de datos:
+Ejecutá las migraciones para que Prisma cree la base de datos:
 
     npx prisma migrate dev --name init
 
-Siembra los datos iniciales de prueba:
+Cargá los datos iniciales de prueba:
 
     npm run prisma:seed
 
-Esto crea dos usuarios listos para usar:
-- admin@stockflow.com con contraseña admin123 y rol ADMIN
-- operator@stockflow.com con contraseña operator123 y rol OPERATOR
-
-También crea 2 categorías y 3 productos de ejemplo, uno de ellos con stock bajo para probar el endpoint de alertas.
-
-Finalmente arranca el servidor:
+Y arrancá el servidor:
 
     npm run dev
 
-El servidor queda disponible en http://localhost:3000
+El backend va a quedar corriendo en http://localhost:3000.
 
----
+**Frontend**
 
-Endpoints disponibles
+En otra terminal, entrá a la carpeta del frontend e instalá sus dependencias:
 
-Rutas públicas (no requieren token):
-- POST /api/auth/register — registrar un nuevo usuario
-- POST /api/auth/login — iniciar sesión y obtener el token JWT
+    cd frontend
+    npm install
+    npm run dev
 
-Rutas para cualquier usuario autenticado:
-- GET /api/products — listar productos, acepta ?categoryId= como filtro
-- POST /api/orders — crear un pedido (operación transaccional)
-- GET /api/orders/:id — ver los detalles de un pedido
-- PATCH /api/orders/:id/status — cambiar el estado de un pedido
+La aplicación va a estar disponible en http://localhost:5173. No necesitás configurar nada más, ya está apuntando al backend por defecto.
 
-Rutas exclusivas para administradores:
-- POST /api/products — crear un producto
-- PUT /api/products/:id — modificar un producto
-- DELETE /api/products/:id — eliminar un producto
-- GET /api/reports/low-stock — ver productos con stock por debajo del mínimo
 
-Para las rutas protegidas hay que enviar el header: Authorization: Bearer <token>
+## Usuarios de prueba
 
----
+El seed crea dos usuarios listos para usar:
 
-Ejemplos de uso
+- admin@stockflow.com con contraseña admin123, tiene rol de administrador
+- operator@stockflow.com con contraseña operator123, tiene rol de operador
 
-Login:
 
-    POST /api/auth/login
-    Content-Type: application/json
+## Qué puede hacer cada rol
 
-    {
-      "email": "admin@stockflow.com",
-      "password": "admin123"
-    }
+El administrador puede ver el listado de productos, crearlos, editarlos y eliminarlos. También puede crear pedidos, ver el detalle de cualquier pedido, cambiar su estado y acceder al reporte de productos con stock bajo.
 
-Crear un pedido:
+El operador puede ver el inventario y crear pedidos, ver el detalle de sus pedidos y cancelarlos si todavía no fueron despachados. No tiene acceso a la gestión de productos ni a los reportes.
 
-    POST /api/orders
-    Authorization: Bearer <token>
-    Content-Type: application/json
 
-    {
-      "items": [
-        { "productId": 1, "quantity": 2 },
-        { "productId": 3, "quantity": 1 }
-      ]
-    }
+## Endpoints de la API
 
-Cancelar un pedido (el stock se reintegra automáticamente):
+Las rutas públicas, que no requieren autenticación, son el registro de usuarios en POST /api/auth/register y el login en POST /api/auth/login.
 
-    PATCH /api/orders/1/status
-    Authorization: Bearer <token>
-    Content-Type: application/json
+Para todas las demás rutas hay que enviar el token JWT en el header de la petición, así: Authorization: Bearer el-token-que-devuelve-el-login.
 
-    {
-      "status": "CANCELLED"
-    }
+Las rutas disponibles para cualquier usuario autenticado son: listar productos en GET /api/products (acepta un query param ?categoryId= para filtrar), crear un pedido en POST /api/orders, ver el detalle de un pedido en GET /api/orders/:id, y cambiar el estado de un pedido en PATCH /api/orders/:id/status.
 
----
+Las rutas exclusivas para administradores son: crear un producto en POST /api/products, actualizar uno en PUT /api/products/:id, eliminarlo en DELETE /api/products/:id, y ver el reporte de stock bajo en GET /api/reports/low-stock.
 
-Estructura del proyecto
+Cuando se cancela un pedido, el stock de los productos involucrados se reintegra automáticamente mediante una transacción en la base de datos.
 
-    src/
-    ├── index.ts                  punto de entrada, configura Express y registra las rutas
-    ├── types/
-    │   ├── index.ts              interfaces y DTOs de TypeScript
-    │   └── AppError.ts           clase de error personalizada con statusCode
-    ├── prisma/
-    │   ├── client.ts             instancia única de PrismaClient
-    │   └── seed.ts               datos iniciales de prueba
-    ├── validators/
-    │   └── schemas.ts            esquemas Zod para validar los datos de entrada
-    ├── middlewares/
-    │   ├── authMiddleware.ts     verifica el JWT en cada petición protegida
-    │   ├── roleGuard.ts          bloquea acceso si el rol no está permitido
-    │   ├── validateRequest.ts    valida req.body contra un esquema Zod
-    │   └── errorHandler.ts       captura todos los errores y responde en JSON
-    ├── services/
-    │   ├── AuthService.ts        registro, hash de contraseña, login y token
-    │   ├── ProductService.ts     CRUD de productos y consulta de stock bajo
-    │   └── OrderService.ts       creación transaccional de pedidos y gestión de estados
-    ├── controllers/
-    │   ├── AuthController.ts
-    │   ├── ProductController.ts
-    │   └── OrderController.ts
-    └── routes/
-        ├── authRoutes.ts
-        ├── productRoutes.ts
-        ├── orderRoutes.ts
-        └── reportRoutes.ts
 
-    prisma/
-    └── schema.prisma             definición de modelos y relaciones de la base de datos
+## Páginas del frontend
+
+La única página pública es el login en /login. Una vez autenticado, las páginas disponibles son el dashboard con un resumen general en /dashboard, el listado de productos en /productos, la sección de pedidos en /pedidos, el detalle de un pedido en /pedidos/:id y el reporte de stock bajo en /reportes (esta última solo visible para administradores).
+
+Si intentás acceder a una página protegida sin estar logueado, la aplicación te redirige al login automáticamente. Si el token expira mientras estás usando la app, cierra la sesión y te manda al login sin que tengas que hacer nada.
+
+
+## Tecnologías utilizadas
+
+El backend está hecho con Node.js, Express y TypeScript. Usa Prisma como ORM sobre SQLite, JSON Web Tokens para la autenticación y Zod para validar los datos de entrada. El frontend está hecho en React con Vite, y usa Context API para manejar el estado de autenticación.

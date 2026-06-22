@@ -1,0 +1,32 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno
+.env
+.env.local
+.env.production
+
+# Base de datos SQLite (generada por Prisma)
+*.db
+*.db-journal
+
+# Build del frontend
+frontend/dist
+
+# Build del backend
+backend/dist
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Claude (uso interno)
+.claude/
